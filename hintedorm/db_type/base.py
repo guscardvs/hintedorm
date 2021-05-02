@@ -7,16 +7,15 @@ T = TypeVar("T")
 RT = TypeVar("RT")
 
 
-class SQLType(ABC):
-
+class DBType(ABC):
     db_service_name = ""
 
     def __init__(
         self,
-        field: str,
-        options: dict[SQLOptions, bool],
-        type_: type,
-        default: Any,
+        field: str = "",
+        options: dict[SQLOptions, bool] = {},
+        type_: type = type,
+        default: Any = ...,
         type_arg: Optional[str] = None,
     ) -> None:
         self.field = field
@@ -26,7 +25,7 @@ class SQLType(ABC):
         self.default = default
 
     def get_sql_type(self) -> str:
-        return {k: getattr(self, f"get_{k.__name__}") for k in ALLOWED_TYPES}[
+        return {k: getattr(self, f"get_{k.__name__.lower()}") for k in ALLOWED_TYPES}[
             self.type_
         ](self.type_arg)
 
@@ -41,7 +40,7 @@ class SQLType(ABC):
         except ValueError as err:
             raise ValueError(err_msg)
 
-    def get_sql_options(self) -> str:
+    def get_constraint_options(self) -> str:
         return " ".join(
             r
             for name, active in self.options.items()
@@ -53,7 +52,11 @@ class SQLType(ABC):
         ...
 
     @abstractmethod
-    def get_default(self) -> str:
+    def str_enclosed(self, v: Any) -> str:
+        ...
+
+    @abstractmethod
+    def get_default(self) -> Optional[str]:
         ...
 
     @abstractmethod

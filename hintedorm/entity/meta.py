@@ -4,6 +4,10 @@ from config import (
     DEFAULT,
     Config
 )
+from constraints.base import Constraint
+from constraints.primary_key import PrimaryKey
+from constraints.unique import Unique
+from db_type.postgres import PostgresType
 from field.entity_field import EntityField
 
 from utils import ALLOWED_TYPES
@@ -15,9 +19,10 @@ class MetaEntity(type):
     def __new__(cls, name, bases, namespace, **kwds):
         cls.setattr_from_namespace(namespace)
         cls.set_config(namespace)
+        cls.db_type = PostgresType
         cls.set_table_name(name, namespace)
         cls.add_annotations_to_child(namespace)
-        print(cls.create_table_str(*namespace["_fields"]))
+        cls.create_table_str(namespace)
         return super().__new__(cls, name, bases, namespace, **kwds)
 
     @classmethod
@@ -52,17 +57,36 @@ class MetaEntity(type):
 
     @classmethod
     def create_field(cls, namespace: dict, field: str, type_: type):
-        namespace[field] = EntityField(
-            namespace[field], type_, field, db_service="mysql"
+        entity_field = EntityField(
+            namespace[field], type_, field, db_type=cls.db_type
         )
+        namespace[field] = entity_field
 
     @classmethod
-    def create_table_str(cls, *fields: EntityField):
+    def create_table_str(cls, namespace):
+        fields = namespace["_fields"]
         if not fields:
-            return None
-        return (
-            f"CREATE TABLE({', '.join(field.type_declaration() for field in fields)})"
+            namespace["create_table"] = None
+        create_table = "CREATE TABLE(\n {}".format(
+            ",\n ".join(field.type_declaration() for field in fields)
         )
+        for constraint in cls.get_constraints(fields):
+            cst = constraint(db_type=cls.db_type())
+            if cst:
+                create_table += ",\n {}".format(cst)
+        namespace["create_table"] = create_table + "\n);"
+
+    @classmethod
+    def get_unique(cls, fields: list[EntityField]):
+        return Unique(*fields)
+
+    @classmethod
+    def get_primary_key(cls, fields: list[EntityField]):
+        return PrimaryKey(*fields)
+
+    @classmethod
+    def get_constraints(cls, fields) -> list[Constraint]:
+        return [cls.get_unique(fields), cls.get_primary_key(fields)]
 
     @classmethod
     def set_config(cls, namespace: dict):

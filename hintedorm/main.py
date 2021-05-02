@@ -1,19 +1,16 @@
+from constraints.primary_key import PrimaryKey
+from db_type.mysql import MySQLType
 from entity import Entity
-from entity.utils import create_init
 from field import field
+from utils import Text
 
 
-@create_init
 class Test(Entity):
-    name: str = field(nullable=True)
-
-    @classmethod
-    def test(cls):
-        print(cls.__doc__)
+    id: str = field("", primary_key=True)
+    name: str = field(nullable=True, primary_key=True)
+    description: Text = field(unique_together=True)
 
 
-test = Test(name="username")
+test = Test(name="username", description="description")
 
-print(test.name)
-print(test)
-print(test._fields)
+print(Test.create_table)

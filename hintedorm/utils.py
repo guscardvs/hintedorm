@@ -4,14 +4,19 @@ from datetime import (
 )
 from enum import Enum
 
-ALLOWED_TYPES = [str, int, float, bool, datetime, date]
+
+class Text(str):
+    ...
+
+
+ALLOWED_TYPES = [str, Text, int, float, bool, datetime, date]
 DEFAULT_MAX_STR_LEN = 100
 
 
 class DBService(str, Enum):
     mysql = "mysql"
     postgres = "postgres"
-    sqlite = "sqlite"
+
 
 class SQLOptions(str, Enum):
     nullable = "nullable"

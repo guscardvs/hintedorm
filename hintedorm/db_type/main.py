@@ -1,10 +1,10 @@
 from utils import DBService
 
-from sql_type.mysql import MySQLType
-from sql_type.postgres import PostgresType
+from db_type.mysql import MySQLType
+from db_type.postgres import PostgresType
 
 
-def get_sql_type_cls():
+def get_db_type_cls():
     if is_mysql():
         return MySQLType
     if is_postgres():
@@ -12,7 +12,7 @@ def get_sql_type_cls():
     raise NotImplementedError
 
 
-def get_sql_type_from_service(db_service: DBService):
+def get_db_type_from_service(db_service: DBService):
     __options = {DBService.mysql: MySQLType, DBService.postgres: PostgresType}
     return __options[db_service]
 
