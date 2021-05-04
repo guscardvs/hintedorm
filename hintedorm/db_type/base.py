@@ -1,7 +1,20 @@
-from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, TypeVar
+from abc import (
+    ABC,
+    abstractmethod
+)
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    TypeVar
+)
 
-from utils import ALLOWED_TYPES, SQLOptions
+from utils import (
+    ALLOWED_TYPES,
+    SQLOptions,
+    is_optional,
+    type_from_optional
+)
 
 T = TypeVar("T")
 RT = TypeVar("RT")
@@ -24,10 +37,14 @@ class DBType(ABC):
         self.type_arg = type_arg
         self.default = default
 
-    def get_sql_type(self) -> str:
-        return {k: getattr(self, f"get_{k.__name__.lower()}") for k in ALLOWED_TYPES}[
-            self.type_
-        ](self.type_arg)
+    def get_db_type(self) -> str:
+        return self.get_type_getter(self.type_)(self.type_arg)
+
+    def get_type_getter(self, type_: type):
+        if is_optional(type_):
+            type_ = type_from_optional(type_)
+            self.options[SQLOptions.nullable] = True
+        return getattr(self, f"get_{type_.__name__.lower()}")
 
     def validate_constraint(
         self, v: T, validator: Callable[[T], tuple[bool, RT]], err_msg: str
@@ -60,7 +77,7 @@ class DBType(ABC):
         ...
 
     @abstractmethod
-    def build(self) -> str:
+    def build_create(self) -> str:
         ...
 
     @abstractmethod

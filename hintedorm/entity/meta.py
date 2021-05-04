@@ -1,4 +1,8 @@
 from inspect import isclass
+from typing import (
+    get_args,
+    get_origin
+)
 
 from config import (
     DEFAULT,
@@ -10,7 +14,11 @@ from constraints.unique import Unique
 from db_type.postgres import PostgresType
 from field.entity_field import EntityField
 
-from utils import ALLOWED_TYPES
+from utils import (
+    ALLOWED_TYPES,
+    is_optional,
+    type_from_optional
+)
 
 SENTINEL = object()
 
@@ -49,6 +57,8 @@ class MetaEntity(type):
 
     @classmethod
     def has_valid_type(cls, type_: type):
+        if is_optional(type_):
+            return type_from_optional(type_) in ALLOWED_TYPES
         return type_ in ALLOWED_TYPES
 
     @classmethod

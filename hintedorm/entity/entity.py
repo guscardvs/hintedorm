@@ -14,10 +14,13 @@ class Entity(metaclass=MetaEntity):
     def set_fields_from_kwds(self, kwds):
         fields = self.__class__.fields()
         for field in fields.values():
-            if field.required and field.name not in kwds:
-                raise AttributeError(
-                    f"Field {field.name} is required"
-                )
+            if field.name not in kwds:
+                if field.required:
+                    raise AttributeError(
+                        f"Field {field.name} is required"
+                    )
+                if field.is_nullable():
+                    setattr(self, field.name, field.set_value(None))
         for k, v in kwds.items():
             if k not in fields:
                 raise AttributeError(
@@ -39,7 +42,7 @@ class Entity(metaclass=MetaEntity):
         return __options[option]()
 
     def __serialize_dict(self):
-        return {k: getattr(self, k) for k, _ in self._fields}  # type: ignore
+        return {k: getattr(self, k) for k in self.fields().keys()}  # type: ignore
 
     def __serialize_json(self):
         return self.Config.default_json_encoder().encode(self.__serialize_dict())

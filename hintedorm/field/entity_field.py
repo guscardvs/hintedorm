@@ -8,7 +8,10 @@ from typing import (
 )
 
 from db_type import DBType
-from utils import SQLOptions
+from utils import (
+    SQLOptions,
+    is_optional
+)
 
 from field._field import _Field
 
@@ -42,6 +45,9 @@ class EntityField(Generic[T, DB_T]):
             self.set_default(default_or_field)
             self.set_options(nullable, primary_key, unique, unique_together)
         self.set_db_type(db_type)
+        if is_optional(self.type_):
+            self.required = False
+            self.options[SQLOptions.nullable] = True
 
     def set_db_type(self, db_type: type[DB_T]):
         self.db_type = db_type(self.col_name, self.options, self.type_, self.default)
@@ -55,10 +61,10 @@ class EntityField(Generic[T, DB_T]):
         )
 
     def set_default(self, default):
-        self.default = default
+        self.default = None
         if default is not Ellipsis:
             self.required = False
-            self.default = None
+            self.default = default
 
     def set_options(
         self, nullable: bool, primary_key: bool, unique: bool, unique_together: bool
@@ -67,16 +73,19 @@ class EntityField(Generic[T, DB_T]):
         self.unique_together = unique_together
         self.options = {SQLOptions.nullable: nullable, SQLOptions.unique: unique}
 
-    def get_value(self, parser: Callable[[], T] = None) -> T:
+    def get_value(self, parser: Callable[[Any], T] = None) -> T:
+        val = self.default
+        if hasattr(self, "alive_value"):
+            val = self.alive_value
         if parser is not None:
-            return parser()
-        return self.default or (lambda: self.type_())()  # type: ignore
+            val = parser(val)
+        return val  # type: ignore
 
     def value_decoder(self, raw_value: Any):
-        return self.alive_value
+        return raw_value
 
     def type_declaration(self):
-        return self.db_type.build()
+        return self.db_type.build_create()
 
     def __repr__(self) -> str:
         return f"EntityField(name={self.name}, type={self.type_}, default={getattr(self, 'default', None)})"
@@ -87,6 +96,12 @@ class EntityField(Generic[T, DB_T]):
     def set_value(self, v):
         self.alive_value = v
         return self
+
+    def is_unique(self):
+        return self.options[SQLOptions.unique]
+    
+    def is_nullable(self):
+        return self.options[SQLOptions.nullable]
 
 
 def get_entity_field(

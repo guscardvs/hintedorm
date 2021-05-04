@@ -72,9 +72,9 @@ class SQLType(DBType):
             return None
         return f"DEFAULT {self.default}"
 
-    def build(self) -> str:
+    def build_create(self) -> str:
         default = self.get_default()
-        base_str = f"{self.enclosed(self.field)} {self.get_sql_type()} {self.get_constraint_options()}"
+        base_str = f"{self.enclosed(self.field)} {self.get_db_type()} {self.get_constraint_options()}"
         if default is None:
             return base_str
         return f"{base_str} {default}"

@@ -28,14 +28,14 @@ class _Field(Generic[T]):
 
 
 def field(
-    default: T = ...,
+    default: Any = ...,
     *,
     column_name: Optional[str] = None,
     nullable: bool = False,
     primary_key: bool = False,
     unique: bool = False,
     unique_together: bool = False
-) -> T:
+) -> Any:
     return _Field(
         default,
         column_name=column_name,
