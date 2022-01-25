@@ -81,8 +81,7 @@ class MetaEntity(type):
             ",\n ".join(field.type_declaration() for field in fields)
         )
         for constraint in cls.get_constraints(fields):
-            cst = constraint(db_type=cls.db_type())
-            if cst:
+            if cst := constraint(db_type=cls.db_type()):
                 create_table += ",\n {}".format(cst)
         namespace["create_table"] = create_table + "\n);"
 

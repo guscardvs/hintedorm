@@ -39,9 +39,7 @@ def is_optional(type_: type) -> bool:
         except ValueError:
             return False
         else:
-            if optional is not type(None):
-                return False
-            return True
+            return optional is type(None)
     return False
 
 

@@ -15,7 +15,7 @@ from db_type.base import DBType
 class SQLType(DBType):
     def get_str(self, arg: Optional[str]):
         if arg is None:
-            return f"VARCHAR({str(DEFAULT_MAX_STR_LEN)})"
+            return f'VARCHAR({DEFAULT_MAX_STR_LEN})'
         ct = self.validate_constraint(
             arg, lambda v: (True, int(v)), "varchar maxsize must be int"
         )
@@ -54,9 +54,7 @@ class SQLType(DBType):
         return "TEXT"
 
     def nullable(self, active: bool):
-        if active:
-            return "NULL"
-        return "NOT NULL"
+        return "NULL" if active else "NOT NULL"
 
     def unique(self, active: bool):
         if active:

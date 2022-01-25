@@ -13,6 +13,4 @@ class DateTimeMixin(JSONEncoder):
 
 class EntityJsonEncoder(DateTimeMixin):
     def default(self, o: Any) -> Any:
-        if isinstance(o, EntityField):
-            return o.get_value()
-        return super().default(o)
+        return o.get_value() if isinstance(o, EntityField) else super().default(o)
