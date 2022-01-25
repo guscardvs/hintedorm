@@ -28,7 +28,7 @@ class ModelFinder:
             if item.is_dir():
                 self.find_from_dir(item)
                 continue
-            if ".py" in path.name and "__init__.py" != path.name:
+            if ".py" in path.name and path.name != "__init__.py":
                 continue
             self.find_from_file(item)
 
@@ -39,11 +39,17 @@ class ModelFinder:
             return
         mod = importlib.import_module(self.get_import(path))
         for name, obj in inspect.getmembers(mod):
-            if inspect.isclass(obj):
-                if issubclass(obj, Entity) and name != "Entity":
-                    self.models[name] = obj
+            if (
+                inspect.isclass(obj)
+                and issubclass(obj, Entity)
+                and name != "Entity"
+            ):
+                self.models[name] = obj
 
     def get_import(self, target: Path):
         target_str = str(target)
-        result = target_str[target_str.index(self.root.name):].replace("/", ".").replace(".py", "")
-        return result
+        return (
+            target_str[target_str.index(self.root.name) :]
+            .replace("/", ".")
+            .replace(".py", "")
+        )
